@@ -14,15 +14,21 @@ app.get('/', function(req, res){
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get('/get-profile', function(req, res){
-    var response = res;
+// whn starting app locally
+let mongoUrlLocal = 'mongodb://admin:password@localhost:27017'
 
-    MongoClient.connect('mongodb://admin:password@localhost:27017', function (err,client){
+// pass these options to mongo client connect request to avoid DeprecationWarning for current Server Discovery and Monitoring engine
+let mongoClientOptions = { useNewUrlParser: true, useUnifiedTopology: true }
+
+app.get('/get-profile', function(req, res){
+    let response = {};
+    //connect to the database
+    MongoClient.connect(mongoUrlLocal,mongoClientOptions , function (err,client){
         if (err) throw err;
 
         var db = client.db('user-account');
-        var query = { userid: 1 };
-        db.collection('users').findOne(query, function (err, result){
+        var myquery = { userid: 1 };
+        db.collection('users').findOne(myquery, function (err, result){
             if (err) throw err;
             client.close();
             response.send(result);
@@ -36,17 +42,18 @@ app.post('/update-profile', function (req, res){
 
         console.log('connecting to the db...');
 
-        MongoClient.connect('mongodb://admin:password@localhost:27017', function (err, client){
+        MongoClient.connect(mongoUrlLocal, mongoClientOptions, function (err, client){
         if (err) throw err;
 
         var db = client.db('user-account');
         userObj['userid'] = 1
-        var query = { userid: 1 };
+
+        var myquery = { userid: 1 };
         var newValues = { $set: userObj };
 
         console.log('successfully connected to the user-account db');
 
-        db.collection('users').updateOne(query, newValues, {upsert: true}, function (err,res){
+        db.collection('users').updateOne(myquery, newValues, {upsert: true}, function (err,res){
             if(err) throw err;
             console.log('Successfully updated/inserted');
             client.close();
@@ -62,5 +69,5 @@ app.get('/profile-picture', function (req, res){
 });
 
 app.listen(3000, function () {
-    console.log('app listening on port 3000');
+    console.log('app listening on port 3000!');
 });
